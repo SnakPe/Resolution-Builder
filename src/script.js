@@ -38,7 +38,7 @@ var Clause = /** @class */ (function () {
         });
     };
     /**
-     * unnötig
+     * unneccesary
      * @param otherClause
      * @returns
      */
@@ -163,7 +163,7 @@ function resolve(clauses) {
     return result;
 }
 function rmOuterBrackets(input) {
-    //rm K(phi) outer brackets
+    //remove outer brackets of K(phi)
     while (input.substring(0, 2) == "{{") {
         if (input.substring(input.length - 2, input.length) == "}}")
             input = input.substring(2, input.length - 2);
@@ -172,7 +172,7 @@ function rmOuterBrackets(input) {
             alert("error: outer brackets not complete");
         }
     }
-    //rm bracket of first and last Klausel for later use
+    //remove bracket of first and last clause for later use
     if (input[0] == '{') {
         if (input[input.length - 1] == '}') {
             input = input.substring(1, input.length - 1);
@@ -203,7 +203,17 @@ function getStringFromClauses(clauses) {
 }
 var svg;
 function drawClauseFromResolution(fromClause1, fromClause2, toClause) {
-    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    var line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line1.setAttribute("x1", fromClause1.svg.firstChild.x.animVal.valueAsString);
+    line1.setAttribute("x1", fromClause1.svg.firstChild.y.animVal.valueAsString);
+    line1.setAttribute("x1", toClause.svg.firstChild.x.animVal.valueAsString);
+    line1.setAttribute("x1", toClause.svg.firstChild.y.animVal.valueAsString);
+    var line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line1.setAttribute("x1", fromClause2.svg.firstChild.x.animVal.valueAsString);
+    line1.setAttribute("x1", fromClause2.svg.firstChild.y.animVal.valueAsString);
+    line1.setAttribute("x1", toClause.svg.firstChild.x.animVal.valueAsString);
+    line1.setAttribute("x1", toClause.svg.firstChild.y.animVal.valueAsString);
+    svg.append(line1, line2);
 }
 function getClauseSVG(clause) {
     var result = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -234,7 +244,9 @@ onload = function () {
         var node = document.createElement("div");
         node.innerHTML = getStringFromClauses(clauses);
         document.getElementsByTagName("body")[0].appendChild(node);
+        //drawNextLevel(clauses,0)
         var generatedClauses;
+        var level = 1;
         do {
             generatedClauses = resolve(clauses);
             clauses.push.apply(clauses, generatedClauses);
@@ -247,3 +259,4 @@ onload = function () {
 };
 setInterval(function () { document.getElementById("SetInputButton").style.backgroundColor = Math.floor(Math.random() * 16777215).toString(16); }, 0);
 // { {A, B}, {A,¬B}, {¬A, B}, {¬A,¬B} }
+//{{A, B, C, D}, {A, ¬C, D}, {A, B, ¬D}, {¬B, C, D}, {¬A, ¬D}, {¬B, ¬C}, {¬A, C}}
