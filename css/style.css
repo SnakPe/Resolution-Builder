@@ -1,0 +1,26 @@
+body{
+	background-color: rgb(48, 42, 36);
+}
+
+#SetInput{
+	width: 40%;
+	margin-bottom: 5px;
+}
+
+svg{
+	width: 90%;
+	height: 90%;
+	display: block;
+	margin: auto;
+	border:1px white solid;
+}
+
+.Clause{
+	
+}
+.ClauseBox{
+	background-color: rgb(250, 242, 210);
+}
+.ClauseText{
+	font: 20px sans-serif;
+}
