@@ -98,7 +98,7 @@ function getVariableFromString(variable : string){
 
 		case 2:
 			name = variable[1]
-			if(variable[0] != '-' && variable[0] != '¬'){				
+			if(variable[0] != '-' || variable[0] != '¬'){				
 				console.error("error: negation expected : ", variable[0])
 				alert("error: negation expected : " + variable[0])
 			}
