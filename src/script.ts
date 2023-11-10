@@ -17,11 +17,11 @@ class Clause{
 		let result = "{"
 
 		for(let i = 0; i < this.vars.length-1; i++){
-			if(this.vars[i].isNegated) result += "¬"
+			if(this.vars[i].isNegated) result += "\u00AC"
 			result += this.vars[i].name
 			result += ", "
 		}
-		if(this.vars[this.vars.length-1].isNegated) result += "¬"
+		if(this.vars[this.vars.length-1].isNegated) result += "\u00AC"
 		result += this.vars[this.vars.length-1].name
 
 		result += "}"
@@ -98,7 +98,7 @@ function getVariableFromString(variable : string){
 
 		case 2:
 			name = variable[1]
-			if(variable[0] != '-' && variable[0] != '¬'){				
+			if(variable[0] != '-' && variable[0] != '\u00AC'){				
 				console.error("error: negation expected : ", variable[0])
 				alert("error: negation expected : " + variable[0])
 			}
@@ -211,7 +211,7 @@ function getStringFromClauses(clauses:Clause[]){
 	clauses.forEach(clause => {
 		result += "{"
 		clause.vars.forEach(variable => {
-			if(variable.isNegated)result += "¬"
+			if(variable.isNegated)result += "\u00AC"
 			result += variable.name
 			result += ","
 		})
@@ -299,5 +299,5 @@ onload = function(){
 }
 
 setInterval(() => {document.getElementById("SetInputButton").style.backgroundColor = Math.floor(Math.random()*16777215).toString(16)}, 0)
-// { {A, B}, {A,¬B}, {¬A, B}, {¬A,¬B} }
-//{{A, B, C, D}, {A, ¬C, D}, {A, B, ¬D}, {¬B, C, D}, {¬A, ¬D}, {¬B, ¬C}, {¬A, C}}
+// { {A, B}, {A,\u00ACB}, {\u00ACA, B}, {\u00ACA,\u00ACB} }
+//{{A, B, C, D}, {A, \u00ACC, D}, {A, B, \u00ACD}, {\u00ACB, C, D}, {\u00ACA, \u00ACD}, {\u00ACB, \u00ACC}, {\u00ACA, C}}
