@@ -98,7 +98,7 @@ function getVariableFromString(variable : string){
 
 		case 2:
 			name = variable[1]
-			if(variable[0] != '-' && variable[0] != '¬'){				
+			if(variable[0] != '-' || variable[0] != '¬'){				
 				console.error("error: negation expected : ", variable[0])
 				alert("error: negation expected : " + variable[0])
 			}
@@ -281,7 +281,7 @@ onload = function(){
 		node.innerHTML = getStringFromClauses(clauses)
 		document.getElementsByTagName("body")[0].appendChild(node)
 		
-		drawNextLevel(clauses,0)
+		//drawNextLevel(clauses,0)
 
 		let generatedClauses : Clause[]
 		let level = 1;
@@ -300,3 +300,4 @@ onload = function(){
 
 setInterval(() => {document.getElementById("SetInputButton").style.backgroundColor = Math.floor(Math.random()*16777215).toString(16)}, 0)
 // { {A, B}, {A,¬B}, {¬A, B}, {¬A,¬B} }
+//{{A, B, C, D}, {A, ¬C, D}, {A, B, ¬D}, {¬B, C, D}, {¬A, ¬D}, {¬B, ¬C}, {¬A, C}}
