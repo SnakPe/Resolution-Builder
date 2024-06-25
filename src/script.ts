@@ -1,81 +1,3 @@
-type Variable = {name : string, isNegated : boolean}
-
-class Clause{
-	vars : Variable[]
-	svg : SVGGElement
-
-	constructor(vars? : Variable[]|string){
-		if(!vars)
-			this.vars = [] as Variable[]
-		else if(typeof vars == "string")
-			this.vars = getClauseFromString(vars).vars
-		else this.vars = vars
-		this.sortLexically()
-	}
-
-	asString(){
-		let result = "{"
-
-		for(let i = 0; i < this.vars.length-1; i++){
-			if(this.vars[i].isNegated) result += "\u00AC"
-			result += this.vars[i].name
-			result += ", "
-		}
-		if(this.vars[this.vars.length-1].isNegated) result += "\u00AC"
-		result += this.vars[this.vars.length-1].name
-
-		result += "}"
-		return result
-	}
-
-	sortLexically(){
-		this.vars.sort((var1,var2) => var1.name.charCodeAt(0) - var2.name.charCodeAt(0))
-	}
-
-	insertVariable(variable : Variable){
-		if(!this.vars.some((v) => {return (v.name == variable.name && v.isNegated == variable.isNegated)}))this.vars.push(variable)
-		this.sortLexically()
-	}
-
-	equals(otherClause : Clause){
-		if(this.vars.length != otherClause.vars.length)return false
-		return !this.vars.some((var1) => {
-			return !otherClause.vars.some((var2) => (var1.isNegated == var2.isNegated && var1.name == var2.name))
-		})
-	}
-
-	/**
-	 * unneccesary
-	 * @param otherClause 
-	 * @returns 
-	 */
-	difference(otherClause : Clause){
-		let result = Math.abs(otherClause.vars.length-this.vars.length)
-		this.vars.forEach(var1 => {
-			if(!otherClause.vars.some(var2 => (var1.name == var2.name && var1.isNegated == var2.isNegated)))
-				result++
-		})
-		return result
-	}
-
-	/**
-	 * resolves this clause with another clause, with respect to a given variable in this clause
-	 * @param otherClause 
-	 * @param variable 
-	 * @returns 
-	 */
-	resolveWith(otherClause : Clause, variable : Variable){
-		let result = new Clause()
-		this.vars.forEach(thisVar => {
-			if(thisVar != variable)result.insertVariable(thisVar)
-		})
-		otherClause.vars.forEach(otherVar => {
-			// zur 2. Aussage: Bei der Resolution muss, wenn variable in this ist, bei der anderen Klausel die Variable mit der anderen Negation entfernt werden, wichtig bei Dingern wie (A, -A)
-			if(otherVar.name != variable.name || variable.isNegated == otherVar.isNegated)result.insertVariable(otherVar)
-		})
-		return result
-	}
-}
 
 
 function getVariableFromString(variable : string){
@@ -88,7 +10,7 @@ function getVariableFromString(variable : string){
 		break
 
 		case 1:
-			let name = variable[0]
+			var name = variable[0]
 			if(ALPHABET.some(letter => letter == name))
 				return {name : variable[0], isNegated : false} as Variable
 
@@ -98,7 +20,7 @@ function getVariableFromString(variable : string){
 
 		case 2:
 			name = variable[1]
-			if(variable[0] != '-' && variable[0] != '\u00AC'){				
+			if(variable[0] != '\u00AC'){				
 				console.error("error: negation expected : ", variable[0])
 				alert("error: negation expected : " + variable[0])
 			}
@@ -124,7 +46,6 @@ function getClauseFromString(clause : string){
 		//if no error and no duplicate
 		if(convVar && !result.vars.some(var2 => var2 == convVar))result.insertVariable(convVar)
 	})
-	result.svg = getClauseSVG(result)
 
 	return result
 }
@@ -144,8 +65,8 @@ function getClausesFromStrings(clauses : string[]){
  * @param clauses 
  * @returns 
  */
-function resolve(clauses : Clause[]){
-	let result = [] as Clause[]
+function resolve(clauses : Clause[]) : Resolution[]{
+	let result = [] as Resolution[]
 
 	//compare all clauses with each other
 	clauses.forEach((clause1,index) => {
@@ -153,31 +74,60 @@ function resolve(clauses : Clause[]){
 			let clause2 = clauses[i]
 
 			//compare the variables of 2 clauses with each other
-			for(let c1Index = 0; c1Index < clause1.vars.length;c1Index++){
-				const var1 = clause1.vars[c1Index]
-				for(let c2Index = 0; c2Index < clause2.vars.length; c2Index++){ //bc the clauses are sorted, you should be able to declare c1Index before the first for loop(c1Index), to increase efficiency
-					const var2 = clause2.vars[c2Index]
+			
+			let char1Index = 0, char2Index = 0
+			while(char1Index < clause1.vars.length && char2Index < clause2.vars.length){
+				const var1 = clause1.vars[char1Index]
+				const var2 = clause2.vars[char2Index]
 
-					if(var1.name == var2.name){
-						if(var2.isNegated != var1.isNegated){
-							const genClause = clause1.resolveWith(clause2,var1)
-							if(!(clauses.some(clause => clause.equals(genClause)) || result.some(clause => clause.equals(genClause)))){
-								result.push(genClause)
-								c1Index = clause1.vars.length // we cannot resolve 2 clauses twice, so we move on to the next clause
-								break
-							}
+				if(var1.name == var2.name){
+					if(var2.isNegated != var1.isNegated){
+						const genClause = clause1.resolveWith(clause2,var1)
+						if(!(clauses.some(clause => clause.equals(genClause)) || result.some(res => res.result.equals(genClause)))){
+							result.push({c1 : clause1, c2 : clause2, result : genClause})
+							break; // we cannot resolve 2 clauses twice, so we move on to the next clause
 						}
-						//c2Index++ //if c2Index is declared before c1Index  
-						break //since a clause can only have one of every variable, if we find the same name once, we won't find it again later 
 					}
-
+					char1Index++; //since a clause can only have one of every variable, if we find the same name once, we won't find it again later. So we can move on to the next variable 
 				}
+
+				//bc the clauses are sorted, we only need to increase the index with the "smaller" character as a name
+				//e.g: if we compare var1 = A and var2 = B, we know that no second character after B is going to be A, it could on be a character between C and Z 
+				if(var1.name.charCodeAt(0) < var2.name.charCodeAt(0))
+					char1Index++
+				else 
+					char2Index++
 			}
+
+
+			/* OLD CODE, LESS EFFICIENT */
+			// for(let char1Index = 0; char1Index < clause1.vars.length;char1Index++){
+			// 	const var1 = clause1.vars[char1Index]
+			// 	for(let char2Index = 0; char2Index < clause2.vars.length; char2Index++){ 
+			// 		const var2 = clause2.vars[char2Index]
+
+			// 		if(var1.name == var2.name){
+			// 			if(var2.isNegated != var1.isNegated){
+			// 				const genClause = clause1.resolveWith(clause2,var1)
+			// 				if(!(clauses.some(clause => clause.equals(genClause)) || result.some(clause => clause.equals(genClause)))){
+			// 					result.push(genClause)
+			// 					char1Index = clause1.vars.length // we cannot resolve 2 clauses twice, so we move on to the next clause
+			// 					break
+			// 				}
+			// 			}
+			// 			//c2Index++ //if c2Index is declared before c1Index  
+			// 			break //since a clause can only have one of every variable, if we find the same name once, we won't find it again later 
+			// 		}
+
+			// 	}
+
+
+			// }
 
 
 		}
 	})
-	console.log("resolve: generated clauses: ", result)
+	// console.log("resolve: generated clauses: ", result)
 
 	return result
 }
@@ -191,6 +141,7 @@ function rmOuterBrackets(input : string){
 		else{
 			console.error("outer brackets not complete")
 			alert("error: outer brackets not complete")
+			break;
 		}
 	}
 	//remove bracket of first and last clause for later use
@@ -222,82 +173,61 @@ function getStringFromClauses(clauses:Clause[]){
 	return result
 }
 
-let svg : SVGSVGElement
-
-function drawClauseFromResolution(fromClause1 : Clause, fromClause2 : Clause, toClause : Clause){
+let graph : ResolutionGraph
 
 
-	let line1 = document.createElementNS("http://www.w3.org/2000/svg", "line")
-	line1.setAttribute("x1",(fromClause1.svg.firstChild as SVGRectElement).x.animVal.valueAsString)
-	line1.setAttribute("x1",(fromClause1.svg.firstChild as SVGRectElement).y.animVal.valueAsString)
-	line1.setAttribute("x1",(toClause.svg.firstChild as SVGRectElement).x.animVal.valueAsString)
-	line1.setAttribute("x1",(toClause.svg.firstChild as SVGRectElement).y.animVal.valueAsString)
-	
-	
-	let line2 = document.createElementNS("http://www.w3.org/2000/svg", "line")
-	line1.setAttribute("x1",(fromClause2.svg.firstChild as SVGRectElement).x.animVal.valueAsString)
-	line1.setAttribute("x1",(fromClause2.svg.firstChild as SVGRectElement).y.animVal.valueAsString)
-	line1.setAttribute("x1",(toClause.svg.firstChild as SVGRectElement).x.animVal.valueAsString)
-	line1.setAttribute("x1",(toClause.svg.firstChild as SVGRectElement).y.animVal.valueAsString)
 
-	svg.append(line1,line2)
-}
-
-function getClauseSVG(clause : Clause){
-	let result = document.createElementNS("http://www.w3.org/2000/svg", "g")
-	result.classList.add("Clause")
-
-	let backbox = document.createElementNS("http://www.w3.org/2000/svg", "rect")
-	backbox.classList.add("ClauseBox")
-	backbox.textContent = clause.asString()
-	
-	let text = document.createElementNS("http://www.w3.org/2000/svg", "text")
-	text.classList.add("ClauseText")
-
-	result.appendChild(backbox)
-	result.appendChild(text)
-
-	//svg.appendChild(result)
-	return result
-} 
 onload = function(){
-	svg = document.getElementsByTagName("svg")[0]
-	document.getElementById("SetInputButton").addEventListener("click",()=>{
-		
+	graph = new ResolutionGraph(document.getElementsByTagNameNS("http://www.w3.org/2000/svg","svg")[0] as SVGSVGElement)
+	document.getElementById("SetInputButton")?.addEventListener("click",()=>{
+		graph.clear()
+
 		let input = (document.getElementById("SetInput")as HTMLInputElement).value
-		console.log("Raw Input: " + input)
 		
 		input = input.replaceAll(" ","")
+		input = input.replaceAll("-","\u00AC")
 		input = input.toUpperCase()
-		console.log("Input: " + input)
 
 		input = rmOuterBrackets(input)
-		let rawClauses = input.split("},{")
-		console.log("Raw Clauses: ", rawClauses)
+		const rawClauses = input.split("},{")
 		
-		let clauses = getClausesFromStrings(rawClauses)
-		console.log("Clauses: ", clauses)
-		let node = document.createElement("div")
-		node.innerHTML = getStringFromClauses(clauses)
-		document.getElementsByTagName("body")[0].appendChild(node)
+		const clauses = getClausesFromStrings(rawClauses)
 		
-		//drawNextLevel(clauses,0)
-
-		let generatedClauses : Clause[]
+		let xPos = 20
+		clauses.forEach((c,index) => {
+			const node = graph.addClause(20+index*100,20,c)
+			graph.setPosition(node,xPos)
+			xPos += node.width + 20
+		})
+		let generatedResolutions : Resolution[]
 		let level = 1;
 		do{
-			generatedClauses = resolve(clauses)
-			clauses.push(...generatedClauses)
-			
-			console.log("Clauses after Resolution: ", clauses)
-			let node = document.createElement("div")
-			node.innerHTML = getStringFromClauses(clauses)
-			document.getElementsByTagName("body")[0].appendChild(node)
-		}while(generatedClauses.length != 0)
+			generatedResolutions = resolve(clauses)
+			if((this.document.getElementById("RedundantClauseCheckbox") as HTMLInputElement).checked)
+				generatedResolutions = generatedResolutions.filter(res => !res.result.isRedundant())
+
+			clauses.push(...generatedResolutions.map((res) => res.result))
+
+			//TODO: set x and y correctly. 
+			xPos = 20
+			for (let i = 0; i < generatedResolutions.length; i++) {
+				const res = generatedResolutions[i];
+				const node = graph.addClause(0, 20+(level)*150, res.result, [res.c1,res.c2])
+				graph.setPosition(node,xPos)
+				xPos += node.width + 20
+				
+			}
+
+			level++
+		}while(generatedResolutions.length != 0)
 		
 	})
+	document.getElementById("ClearButton")?.addEventListener("click", () => graph.clear())
 }
 
-setInterval(() => {document.getElementById("SetInputButton").style.backgroundColor = Math.floor(Math.random()*16777215).toString(16)}, 0)
-// { {A, B}, {A,\u00ACB}, {\u00ACA, B}, {\u00ACA,\u00ACB} }
-//{{A, B, C, D}, {A, \u00ACC, D}, {A, B, \u00ACD}, {\u00ACB, C, D}, {\u00ACA, \u00ACD}, {\u00ACB, \u00ACC}, {\u00ACA, C}}
+setInterval(() => {document.getElementById("SetInputButton")!.style.backgroundColor = `#${Math.floor(Math.random()*16777216).toString(16)}`}, 1)
+
+//Some test inputs
+// { {A, B}, {A,¬B}, {¬A, B}, {¬A,¬B} }
+//{{A, B, C, D}, {A, ¬C, D}, {A, B, ¬D}, {¬B, C, D}, {¬A, ¬D}, {¬B, ¬C}, {¬A, C}}
+//{{¬A, ¬B, ¬H}, {C, D}, {E, ¬F, ¬G}, {¬B, ¬D, ¬E}, {¬C, F, H}, {A, B, D}, {¬A, E, G}}

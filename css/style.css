@@ -1,5 +1,11 @@
+html{
+	height: 99vh;
+}
 body{
 	background-color: rgb(48, 42, 36);
+	color: white;
+	height: 100%;
+	user-select: none;
 }
 
 #SetInput{
@@ -14,13 +20,25 @@ svg{
 	margin: auto;
 	border:1px white solid;
 }
+.Node .Box{
+	rx: 10;
+	fill: lightyellow;
 
-.Clause{
-	
 }
-.ClauseBox{
-	background-color: rgb(250, 242, 210);
+.Node .Text{
+	fill:black;
+	font-family: Verdana, Geneva, Tahoma, sans-serif;
+	dominant-baseline: middle;
+	text-anchor: middle;
 }
-.ClauseText{
-	font: 20px sans-serif;
+.Edge{
+	stroke-width: 2px;
+}
+.Edge .Line{
+	stroke: white;
+	border: 1px solid black;
+}
+.Edge .ArrowTip{
+	stroke: black;
+	fill: white
 }
