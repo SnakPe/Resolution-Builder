@@ -276,10 +276,19 @@ class ResolutionGraph {
     constructor(svg) {
         this._nodes = new Map();
         this._edges = [];
+        this._x = 0;
+        this._y = 0;
         this.svg = svg;
         svg.addEventListener("pointermove", (ev) => {
-            if (this.draggedNode)
-                this.setPosition(this.draggedNode, ev.offsetX - this.draggedNode.width / 2, ev.offsetY - this.draggedNode.height / 2);
+            if (this._draggedNode)
+                this.setNodePosition(this._draggedNode, this._x + ev.offsetX - this._draggedNode.width / 2, this._y + ev.offsetY - this._draggedNode.height / 2);
+            else {
+                if (ev.buttons === 1) {
+                    this._x -= ev.movementX;
+                    this._y -= ev.movementY;
+                    svg.setAttribute("viewBox", `${this._x} ${this._y} ${svg.width.animVal.value} ${svg.height.animVal.value}`);
+                }
+            }
         });
         this.clear();
     }
@@ -293,10 +302,10 @@ class ResolutionGraph {
             console.warn("Already existing node has been added to graph");
         const newNode = new ClauseNode(newClause, x, y);
         newNode.svg.addEventListener("pointerdown", () => {
-            this.draggedNode = newNode;
+            this._draggedNode = newNode;
         });
         newNode.svg.addEventListener("pointerup", () => {
-            this.draggedNode = undefined;
+            this._draggedNode = undefined;
         });
         this.svg.appendChild(newNode.svg);
         newNode.updateSVG();
@@ -314,7 +323,7 @@ class ResolutionGraph {
         }
         return newNode;
     }
-    setPosition(node, x, y) {
+    setNodePosition(node, x, y) {
         node.setPosition(x, y);
         this.getEdgesConnectingNode(node).forEach(edge => edge.updateSVG());
     }
@@ -456,7 +465,7 @@ onload = function () {
         let xPos = 20;
         clauses.forEach((c, index) => {
             const node = graph.addClause(20 + index * 100, 20, c);
-            graph.setPosition(node, xPos);
+            graph.setNodePosition(node, xPos);
             xPos += node.width + 20;
         });
         let generatedResolutions;
@@ -470,7 +479,7 @@ onload = function () {
             for (let i = 0; i < generatedResolutions.length; i++) {
                 const res = generatedResolutions[i];
                 const node = graph.addClause(0, 20 + (level) * 150, res.result, [res.c1, res.c2]);
-                graph.setPosition(node, xPos);
+                graph.setNodePosition(node, xPos);
                 xPos += node.width + 20;
             }
             level++;

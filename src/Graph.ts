@@ -5,13 +5,25 @@ class ResolutionGraph{
 
 	svg : SVGSVGElement
 
-	private draggedNode? : ClauseNode
+	private _draggedNode? : ClauseNode
+	private _x : number = 0
+	private _y : number = 0
+
 
 	constructor(svg : SVGSVGElement){
+		
 		this.svg = svg
+		
 		svg.addEventListener("pointermove",(ev) => {
-			if(this.draggedNode)
-				this.setPosition(this.draggedNode, ev.offsetX-this.draggedNode.width/2, ev.offsetY-this.draggedNode.height/2)
+			if(this._draggedNode)
+				this.setNodePosition(this._draggedNode, this._x + ev.offsetX-this._draggedNode.width/2, this._y + ev.offsetY-this._draggedNode.height/2)
+			else{
+				if(ev.buttons === 1){
+					this._x -= ev.movementX
+					this._y -= ev.movementY
+					svg.setAttribute("viewBox", `${this._x} ${this._y} ${svg.width.animVal.value} ${svg.height.animVal.value}`)
+				}
+			}
 		})
 		this.clear()
 	}
@@ -31,10 +43,10 @@ class ResolutionGraph{
 		if(this._nodes.has(newClause))console.warn("Already existing node has been added to graph")
 		const newNode = new ClauseNode(newClause, x, y)
 		newNode.svg.addEventListener("pointerdown", () => {
-			this.draggedNode = newNode
+			this._draggedNode = newNode
 		})
 		newNode.svg.addEventListener("pointerup", () => {
-			this.draggedNode = undefined
+			this._draggedNode = undefined
 		})
 		
 		this.svg.appendChild(newNode.svg)
@@ -58,7 +70,7 @@ class ResolutionGraph{
 		return newNode
 	}
 
-	setPosition(node : ClauseNode, x?: number, y?: number){
+	setNodePosition(node : ClauseNode, x?: number, y?: number){
 		node.setPosition(x,y)
 		this.getEdgesConnectingNode(node).forEach(edge => edge.updateSVG())
 	}
