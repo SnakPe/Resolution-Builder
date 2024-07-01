@@ -19,6 +19,7 @@ svg{
 	display: block;
 	margin: auto;
 	border:1px white solid;
+	touch-action: pinch-zoom;
 }
 .Node .Box{
 	rx: 10;

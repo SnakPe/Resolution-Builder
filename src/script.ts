@@ -12,7 +12,7 @@ function getVariableFromString(variable : string){
 		case 1:
 			var name = variable[0]
 			if(ALPHABET.some(letter => letter == name))
-				return {name : variable[0], isNegated : false} as Variable
+				return {name : variable[0], isNegated : false} as Literal
 
 			console.error("error: letter expected : ", variable[0])
 			alert("error: letter expected : " + variable[0])
@@ -29,7 +29,7 @@ function getVariableFromString(variable : string){
 				alert("error: letter expected : " + name)
 			}
 			else
-				return {name : variable[1], isNegated : true} as Variable	
+				return {name : variable[1], isNegated : true} as Literal	
 		break
 
 		default:

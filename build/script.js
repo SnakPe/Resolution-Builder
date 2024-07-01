@@ -278,8 +278,12 @@ class ResolutionGraph {
         this._edges = [];
         this._x = 0;
         this._y = 0;
-        this.svg = svg;
+        this._svg = svg;
+        svg.addEventListener("pointerdown", () => {
+            this._draggedNode = undefined;
+        });
         svg.addEventListener("pointermove", (ev) => {
+            console.log(ev.buttons);
             if (this._draggedNode)
                 this.setNodePosition(this._draggedNode, this._x + ev.offsetX - this._draggedNode.width / 2, this._y + ev.offsetY - this._draggedNode.height / 2);
             else {
@@ -295,30 +299,32 @@ class ResolutionGraph {
     clear() {
         this._nodes = new Map();
         this._edges = [];
-        this.svg.innerHTML = "";
+        this._svg.innerHTML = "";
     }
     addClause(x, y, newClause, resolvedClauses) {
         if (this._nodes.has(newClause))
             console.warn("Already existing node has been added to graph");
         const newNode = new ClauseNode(newClause, x, y);
-        newNode.svg.addEventListener("pointerdown", () => {
+        newNode.svg.addEventListener("pointerdown", (ev) => {
             this._draggedNode = newNode;
+            ev.stopPropagation();
         });
-        newNode.svg.addEventListener("pointerup", () => {
+        newNode.svg.addEventListener("pointerup", (ev) => {
             this._draggedNode = undefined;
+            ev.stopPropagation();
         });
-        this.svg.appendChild(newNode.svg);
+        this._svg.appendChild(newNode.svg);
         newNode.updateSVG();
         this._nodes.set(newClause, newNode);
         if (resolvedClauses) {
             console.assert(this._nodes.get(resolvedClauses[0]) !== undefined && this._nodes.get(resolvedClauses[1]) !== undefined);
             let newEdge = new Edge(this._nodes.get(resolvedClauses[0]), newNode);
             this._edges.push(newEdge);
-            this.svg.insertBefore(newEdge.svg, this.svg.firstChild);
+            this._svg.insertBefore(newEdge.svg, this._svg.firstChild);
             newEdge.updateSVG();
             newEdge = new Edge(this._nodes.get(resolvedClauses[1]), newNode);
             this._edges.push(newEdge);
-            this.svg.insertBefore(newEdge.svg, this.svg.firstChild);
+            this._svg.insertBefore(newEdge.svg, this._svg.firstChild);
             newEdge.updateSVG();
         }
         return newNode;

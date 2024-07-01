@@ -1,10 +1,10 @@
 
 class Clause{
-	vars : Variable[]
+	vars : Literal[]
 
-	constructor(vars? : Variable[]|string){
+	constructor(vars? : Literal[]|string){
 		if(!vars)
-			this.vars = [] as Variable[]
+			this.vars = [] as Literal[]
 		else if(typeof vars == "string")
 			this.vars = getClauseFromString(vars).vars
 		else this.vars = vars
@@ -37,7 +37,7 @@ class Clause{
 		this.vars.sort((var1,var2) => var1.name.charCodeAt(0) - var2.name.charCodeAt(0))
 	}
 
-	insertVariable(variable : Variable){
+	insertVariable(variable : Literal){
 		if(!this.vars.some((v) => {return (v.name == variable.name && v.isNegated == variable.isNegated)}))this.vars.push(variable)
 		this.sortLexically()
 	}
@@ -69,7 +69,7 @@ class Clause{
 	 * @param variable 
 	 * @returns 
 	 */
-	resolveWith(otherClause : Clause, variable : Variable){
+	resolveWith(otherClause : Clause, variable : Literal){
 		let result = new Clause()
 		this.vars.forEach(thisVar => {
 			if(thisVar != variable)result.insertVariable(thisVar)
