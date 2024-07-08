@@ -225,7 +225,6 @@ onload = function(){
 	document.getElementById("ClearButton")?.addEventListener("click", () => graph.clear())
 }
 
-setInterval(() => {document.getElementById("SetInputButton")!.style.backgroundColor = `#${Math.floor(Math.random()*16777216).toString(16)}`}, 1)
 
 //Some test inputs
 // { {A, B}, {A,¬B}, {¬A, B}, {¬A,¬B} }

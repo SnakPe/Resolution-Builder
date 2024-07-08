@@ -122,17 +122,22 @@ class Edge {
         this._to = to;
         this._svg = document.createElementNS("http://www.w3.org/2000/svg", "g");
         this._svg.classList.add("Edge");
+        this._outerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        this._outerLine.classList.add("Edge", "Line", "Outer");
         this._edgeLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        this._edgeLine.classList.add("Edge", "Line");
+        this._edgeLine.classList.add("Edge", "Line", "Inner");
         this._arrowTip = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
         this._arrowTip.classList.add("Edge", "ArrowTip");
-        this._svg.append(this._edgeLine, this._arrowTip);
-        this._line = this.NodesIntersection();
+        this._svg.append(this._outerLine, this._edgeLine, this._arrowTip);
     }
     updateSVG() {
         this._line = this.NodesIntersection();
         if (!this._line)
             return;
+        this._outerLine.setAttribute("x1", `${this._line.start.x}`);
+        this._outerLine.setAttribute("y1", `${this._line.start.y}`);
+        this._outerLine.setAttribute("x2", `${this._line.end.x}`);
+        this._outerLine.setAttribute("y2", `${this._line.end.y}`);
         this._edgeLine.setAttribute("x1", `${this._line.start.x}`);
         this._edgeLine.setAttribute("y1", `${this._line.start.y}`);
         this._edgeLine.setAttribute("x2", `${this._line.end.x}`);
@@ -206,6 +211,8 @@ class Edge {
     }
     connects(node) {
         return this._to === node || this._from === node;
+    }
+    setColor() {
     }
 }
 function isPoint(a) {
@@ -283,7 +290,6 @@ class ResolutionGraph {
             this._draggedNode = undefined;
         });
         svg.addEventListener("pointermove", (ev) => {
-            console.log(ev.buttons);
             if (this._draggedNode)
                 this.setNodePosition(this._draggedNode, this._x + ev.offsetX - this._draggedNode.width / 2, this._y + ev.offsetY - this._draggedNode.height / 2);
             else {
@@ -318,13 +324,16 @@ class ResolutionGraph {
         this._nodes.set(newClause, newNode);
         if (resolvedClauses) {
             console.assert(this._nodes.get(resolvedClauses[0]) !== undefined && this._nodes.get(resolvedClauses[1]) !== undefined);
+            const randomColor = `#${Math.floor(Math.random() * 16777216).toString(16).padStart(6, "0")}`;
             let newEdge = new Edge(this._nodes.get(resolvedClauses[0]), newNode);
             this._edges.push(newEdge);
             this._svg.insertBefore(newEdge.svg, this._svg.firstChild);
+            newEdge.svg.style.stroke = randomColor;
             newEdge.updateSVG();
             newEdge = new Edge(this._nodes.get(resolvedClauses[1]), newNode);
             this._edges.push(newEdge);
             this._svg.insertBefore(newEdge.svg, this._svg.firstChild);
+            newEdge.svg.style.stroke = randomColor;
             newEdge.updateSVG();
         }
         return newNode;
@@ -493,4 +502,3 @@ onload = function () {
     });
     document.getElementById("ClearButton")?.addEventListener("click", () => graph.clear());
 };
-setInterval(() => { document.getElementById("SetInputButton").style.backgroundColor = `#${Math.floor(Math.random() * 16777216).toString(16)}`; }, 1);

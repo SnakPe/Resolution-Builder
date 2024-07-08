@@ -18,7 +18,7 @@ svg{
 	height: 90%;
 	display: block;
 	margin: auto;
-	border:1px white solid;
+	border:2px white solid;
 	touch-action: pinch-zoom;
 }
 .Node .Box{
@@ -35,9 +35,9 @@ svg{
 .Edge{
 	stroke-width: 2px;
 }
-.Edge .Line{
-	stroke: white;
-	border: 1px solid black;
+.Edge .Outer.Line{
+	stroke-width: 4px;
+	stroke: black;
 }
 .Edge .ArrowTip{
 	stroke: black;

@@ -2,13 +2,14 @@ const TIPSIZE = 15
 
 class Edge{
 	//edge ends
-	private _from : ClauseNode
-	private _to : ClauseNode
+	private readonly _from : ClauseNode
+	private readonly _to : ClauseNode
 
 	//svg representations
-	private _svg : SVGGElement
-	private _edgeLine : SVGLineElement
-	private _arrowTip : SVGPolygonElement
+	private readonly _svg : SVGGElement
+	private readonly _outerLine : SVGLineElement
+	private readonly _edgeLine : SVGLineElement
+	private readonly _arrowTip : SVGPolygonElement
 
 	//geometric abstraction for calculations
 	private _line? : Line 
@@ -19,14 +20,14 @@ class Edge{
 
 		this._svg = document.createElementNS("http://www.w3.org/2000/svg","g")
 		this._svg.classList.add("Edge")
+		this._outerLine = document.createElementNS("http://www.w3.org/2000/svg","line")
+		this._outerLine.classList.add("Edge", "Line", "Outer")
 		this._edgeLine = document.createElementNS("http://www.w3.org/2000/svg","line")
-		this._edgeLine.classList.add("Edge","Line")
+		this._edgeLine.classList.add("Edge", "Line", "Inner")
 		this._arrowTip = document.createElementNS("http://www.w3.org/2000/svg","polygon")
-		this._arrowTip.classList.add("Edge","ArrowTip")
+		this._arrowTip.classList.add("Edge", "ArrowTip")
 
-		this._svg.append(this._edgeLine,this._arrowTip)
-
-		this._line = this.NodesIntersection()
+		this._svg.append(this._outerLine, this._edgeLine, this._arrowTip)
 
 
 	}
@@ -36,6 +37,10 @@ class Edge{
 		//TODO: find a better alternative, that hides or removes the arrow
 		if(!this._line)return
 
+		this._outerLine.setAttribute("x1", `${this._line.start.x}`)
+		this._outerLine.setAttribute("y1", `${this._line.start.y}`)
+		this._outerLine.setAttribute("x2", `${this._line.end.x}`)
+		this._outerLine.setAttribute("y2", `${this._line.end.y}`)
 		this._edgeLine.setAttribute("x1", `${this._line.start.x}`)
 		this._edgeLine.setAttribute("y1", `${this._line.start.y}`)
 		this._edgeLine.setAttribute("x2", `${this._line.end.x}`)
@@ -126,5 +131,8 @@ class Edge{
 	}
 	public connects(node : ClauseNode){
 		return this._to === node || this._from === node 
+	}
+	public setColor(){
+
 	}
 }

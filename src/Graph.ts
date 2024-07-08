@@ -18,7 +18,6 @@ class ResolutionGraph{
 			this._draggedNode = undefined
 		})
 		svg.addEventListener("pointermove",(ev) => {
-			console.log(ev.buttons)
 			if(this._draggedNode)
 				this.setNodePosition(this._draggedNode, this._x + ev.offsetX-this._draggedNode.width/2, this._y + ev.offsetY-this._draggedNode.height/2)
 			else{
@@ -62,14 +61,18 @@ class ResolutionGraph{
 		if(resolvedClauses){
 			console.assert(this._nodes.get(resolvedClauses[0]) !== undefined && this._nodes.get(resolvedClauses[1]) !== undefined)
 
+			const randomColor = `#${Math.floor(Math.random()*16777216).toString(16).padStart(6,"0")}`
+
 			let newEdge = new Edge(this._nodes.get(resolvedClauses[0])!,newNode)
 			this._edges.push(newEdge)
 			this._svg.insertBefore(newEdge.svg,this._svg.firstChild)
+			newEdge.svg.style.stroke = randomColor
 			newEdge.updateSVG()
 			
 			newEdge = new Edge(this._nodes.get(resolvedClauses[1])!,newNode)
 			this._edges.push(newEdge)
 			this._svg.insertBefore(newEdge.svg,this._svg.firstChild)
+			newEdge.svg.style.stroke = randomColor
 			newEdge.updateSVG()
 
 		}
