@@ -4,13 +4,66 @@
 		<meta charset="UTF-8"/>
 		<link rel="stylesheet" type="text/css" href="./css/style.css">
 		<script src="./build/script.js" type="text/javascript"></script>
+		<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 	</head>
 	<body>
-		<input id="SetInput" type="text" value="{{A,B}, {C,-B,D}, {-D}, {A,-C}, {-A}}"></br>
-		
-		<button id="SetInputButton">Submit</button>
-		<button id="ClearButton">Clear</button>
-		<input id="RedundantClauseCheckbox" type="checkbox">Remove redundant Clauses</input></br>
-		<svg id="ResolutionTree"></svg>
+		<div id="MainInput">
+			<input id="SetInput" type="text" value="{{A,B}, {C,-B,D}, {-D}, {A,-C}, {-A}}"></br>
+			
+			<button id="SetInputButton">Submit</button>
+			<button id="ClearButton">Clear</button>
+			<input id="RedundantClauseCheckbox" type="checkbox">Remove redundant Clauses</input></br>
+			<svg id="ResolutionTree"></svg>
+		</div>
+		<div id="Explanation">
+			<p>
+				<h1>Resolution: Propositional Logic</h1>
+				Resolution is a technique for proving theorems. 
+				It works by taking any formula, and transforming it first into the conjunctive normal form and then in Clausal Form.
+				Then we can prove that the formula is unsatisfiable using the rules of resolution. In the following, I will outline how resolution works, and will try to give a rough, intuitive way to understand resolution :).
+
+			</p>
+			<p>
+				<h1>Conjunctive Normal Form</h2>
+				<p>
+					A formula is in CNF when it's of the form \((C_1 \land C_2 \land \dots \land C_n)\) where every clause \(C_i = (L_1 \lor L_2 \lor \dots L_m)\), with \(L_i\) being a Literal <br>
+					Some examples include:</br>
+					\(\begin{align*}
+					&(A \lor B \lor \neg C) \land (A \lor \neg B) \land (\neg A \lor C) \land \neg C\\
+					&(\neg A) \land (A) \land (B \land C \land D \land E)\\
+					&(A \lor B) \land (\neg A \lor B) \land (A \lor \neg B) \land (\neg A \lor \neg B)
+					\end{align*}\)
+				</p>
+				<p>
+					The benefit of the CNF is that for the entire formula to be true, every clause must be true.
+					This means that, if we want to show that a formula is unsatisfiable, we can try to compare 2 clauses, and see if they contradict each other. <br>
+					Take for example the second example above. Since \(A\) and \(\neg A\) cannot be true at the same time, we know that the entire formula is always false.<br>
+					We can also compare 2 clauses, and see if we can derive/resolve a new clause, that might help us. For example, look at the clauses \((A \lor B) \land (\neg A \lor B)\).
+					Depending on the value of \(A\), one Clause is always true, while the other one will just become \((B)\). Therefore, we can conclude that we can add \((B)\) to our formula while keeping it equivalent: \((A \lor B) \land (\neg A \lor B) \equiv (A \lor B) \land (\neg A \lor B) \land B\)<br>
+					But before we use this property of the CNF, we want to change it's form to have an easier time, leading us to the Clausal Form.
+				</p>
+			</p>
+			<p>
+				<h1>Clausal Form</h1>
+				<p>
+					When our formula is in CNF, we can bring it to the CF to make it easier to formalize and use the afformentioned properties.<br>
+					The Clausal Form of a formula \(\phi\) in CNF is a set \(\mathcal K\) consisting of sets with literals. 
+					Every set in \(\mathcal K\) represents a clause in \(\phi\), so for every clause in \(\phi\), we put all its literals in a set.
+					For example:<br>
+					\(\mathcal K((A \lor B \lor \neg C) \land (A \lor \neg B) \land (\neg A \lor C) \land \neg C) = \{\{A,B,\neg C\}, \{A, \neg B\}, \{\neg A, C\}, \{\neg C\}\}\) 
+				</p>
+			</p>
+			<p>
+				<h1>Defining Resolution</h1>
+				<p>
+					With the CF, we can now define the rule of resolution:<br>
+					<p>
+						If we have 2 clauses \(C_1, C_2\), with \(L \in C_1\) and \(\neg L \in C_2\), then \(C = (C_1 / \{L\}) \cup (C_2 / \{\neg L\})\) is the resolvant of \(C_1\) and \(C_2\)<br>
+						Let \(\text{Res}(\mathcal K) = \mathcal K \cup \{C \mid C \text{ is resolvant of 2 clauses in }\mathcal K\}\). If \(\emptyset \in \text{Res}(\mathcal K)\), then \(\mathcal K\) is unsatisfiable 
+					</p>
+					Now, we can use \(\text{Res}\) repeatedly until we either have \(\emptyset \in \text{Res}(\mathcal K)\), or until we can't find any new resolvants.
+				</p>
+			</p>
+		</div>
 	</body>
 </html>

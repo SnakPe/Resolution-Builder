@@ -2,10 +2,16 @@ html{
 	height: 99vh;
 }
 body{
+	margin : 0px;
+	padding : 8px;
 	background-color: rgb(48, 42, 36);
 	color: white;
-	height: 100%;
 	user-select: none;
+	overflow-x: hidden;
+}
+#MainInput{
+	width: 100%;
+	height: 100vh;
 }
 
 #SetInput{
@@ -42,4 +48,9 @@ svg{
 .Edge .ArrowTip{
 	stroke: black;
 	fill: white
+}
+
+#Explanation{
+	margin: auto;
+	width: 90%;
 }
