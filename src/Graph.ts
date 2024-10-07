@@ -8,26 +8,61 @@ class ResolutionGraph{
 	private _draggedNode? : ClauseNode
 	private _x : number = 0
 	private _y : number = 0
-
+	private _zoom : number = 1
 
 	constructor(svg : SVGSVGElement){
 		
 		this._svg = svg
+
+		//stop body from scrolling when hovering over it
+		svg.addEventListener("pointerover", () => {
+			document.getElementsByTagName("body")[0].style.overflow = "hidden"
+		})
+		svg.addEventListener("pointerout", () => {
+			document.getElementsByTagName("body")[0].style.overflow = "auto"
+		})
+
 		
 		svg.addEventListener("pointerdown", () => {
 			this._draggedNode = undefined
 		})
+
+		//move node if one was clicked on, or mode entire view
 		svg.addEventListener("pointermove",(ev) => {
-			if(this._draggedNode)
-				this.setNodePosition(this._draggedNode, this._x + ev.offsetX-this._draggedNode.width/2, this._y + ev.offsetY-this._draggedNode.height/2)
+			if(this._draggedNode !== undefined){
+				const nodeX = (this._x) + this._zoom*ev.offsetX-this._draggedNode.width /2
+				const nodeY = (this._y) + this._zoom*ev.offsetY-this._draggedNode.height/2
+				this.setNodePosition(
+					this._draggedNode, 
+					nodeX, 
+					nodeY
+				)
+			}
 			else{
 				if(ev.buttons === 1){
-					this._x -= ev.movementX
-					this._y -= ev.movementY
-					svg.setAttribute("viewBox", `${this._x} ${this._y} ${svg.width.animVal.value} ${svg.height.animVal.value}`)
+					this._x -= ev.movementX*this._zoom
+					this._y -= ev.movementY*this._zoom
+					this.refreshSVG()
 				}
 			}
 		})
+		// zoom in/out
+		svg.addEventListener("wheel",(ev) => {
+			let speed = Math.abs(ev.deltaY/100)**1.5
+			speed = ev.deltaY < 0 ? -speed : speed
+			const newZoom = this._zoom+speed//alternatively: this.zoom*(1+speed)
+
+			if(this._svg.width.baseVal.value * newZoom > 0.5){
+				const oldZoom = this._zoom
+				this._zoom = newZoom
+				
+				//zooms into/out of the middle of the canvas
+				this._x += this._svg.width.baseVal.value * (oldZoom-this._zoom) / 2
+				this._y += this._svg.height.baseVal.value * (oldZoom-this._zoom) / 2
+			}
+			this.refreshSVG()
+		})
+
 		this.clear()
 	}
 
@@ -36,8 +71,17 @@ class ResolutionGraph{
 		this._edges = []
 		this._svg.innerHTML = ""
 	}
+
+	refreshSVG(){
+		const width = this._svg.width.baseVal.value * this._zoom
+		const height = this._svg.height.baseVal.value * this._zoom
+
+		if(height > 0 && width > 0)
+			this._svg.setAttribute("viewBox", `${this._x} ${this._y} ${width} ${height}`)
+	}
 	/**
 	 * creates a new Node for a Clause, 
+	 * 
 	 * 
 	 * @param resolvedClauses if clause was made by resolving 2 Clauses, add these here
 	 * @returns new node for {@link newClause|the given clause}
@@ -45,6 +89,8 @@ class ResolutionGraph{
 	addClause(x : number, y : number, newClause : Clause, resolvedClauses? : [Clause,Clause]){
 		if(this._nodes.has(newClause))console.warn("Already existing node has been added to graph")
 		const newNode = new ClauseNode(newClause, x, y)
+		
+		//save node as being selected for dragging
 		newNode.svg.addEventListener("pointerdown", (ev) => {
 			this._draggedNode = newNode
 			ev.stopPropagation()
@@ -79,7 +125,7 @@ class ResolutionGraph{
 		return newNode
 	}
 
-	setNodePosition(node : ClauseNode, x?: number, y?: number){
+	setNodePosition(node : ClauseNode, x: number, y: number){
 		node.setPosition(x,y)
 		this.getEdgesConnectingNode(node).forEach(edge => edge.updateSVG())
 	}

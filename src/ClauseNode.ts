@@ -39,12 +39,12 @@ class ClauseNode{
 	}
 
 	/**
-	 * @todo this
+	 * 
 	 * @param x 
 	 * @param y 
 	 */
 
-	public setPosition(x?:number, y?:number){
+	public setPosition(x:number, y:number){
 
 		if(x !== undefined){
 			this._coords.x = x
