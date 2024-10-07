@@ -27,10 +27,16 @@ svg{
 	border:2px white solid;
 	touch-action: pinch-zoom;
 }
+.Node{
+	fill:lightyellow
+}
 .Node .Box{
 	rx: 10;
-	fill: lightyellow;
+	fill: inherit;
 
+}
+.Node:hover{
+	fill:yellow
 }
 .Node .Text{
 	fill:black;

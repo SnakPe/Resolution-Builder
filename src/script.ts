@@ -176,10 +176,9 @@ function getStringFromClauses(clauses:Clause[]){
 let graph : ResolutionGraph
 
 
-
 onload = function(){
 	graph = new ResolutionGraph(document.getElementsByTagNameNS("http://www.w3.org/2000/svg","svg")[0] as SVGSVGElement)
-	document.getElementById("SetInputButton")?.addEventListener("click",()=>{
+	function handleSetInputButton(){
 		graph.clear()
 
 		let input = (document.getElementById("SetInput")as HTMLInputElement).value
@@ -203,7 +202,7 @@ onload = function(){
 		let level = 1;
 		do{
 			generatedResolutions = resolve(clauses)
-			if((this.document.getElementById("RedundantClauseCheckbox") as HTMLInputElement).checked)
+			if((document.getElementById("RedundantClauseCheckbox") as HTMLInputElement).checked)
 				generatedResolutions = generatedResolutions.filter(res => !res.result.isRedundant())
 
 			clauses.push(...generatedResolutions.map((res) => res.result))
@@ -220,7 +219,13 @@ onload = function(){
 
 			level++
 		}while(generatedResolutions.length != 0)
-		
+	}
+	
+	document.getElementById("SetInputButton")?.addEventListener("click", 
+		handleSetInputButton
+	)
+	document.getElementById("SetInput")?.addEventListener("keydown", (ev) => {
+		if(ev.key == "Enter")handleSetInputButton()
 	})
 	document.getElementById("ClearButton")?.addEventListener("click", () => graph.clear())
 }

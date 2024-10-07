@@ -8,10 +8,10 @@
 	</head>
 	<body>
 		<div id="MainInput">
-			<input id="SetInput" type="text" value="{{A,B}, {C,-B,D}, {-D}, {A,-C}, {-A}}"></br>
-			
-			<button id="SetInputButton">Submit</button>
-			<button id="ClearButton">Clear</button>
+			<label for="SetInput">Input Clausal Form:</label>
+			<input id="SetInput" type="text" placeholder="Clausal form of formula" value="{{A,B}, {C,-B,D}, {-D}, {A,-C}, {-A}}"></br>
+			<button id="SetInputButton">Use Resolution</button>
+			<button id="ClearButton">Clear Graph</button>
 			<input id="RedundantClauseCheckbox" type="checkbox">Remove redundant Clauses</input></br>
 			<svg id="ResolutionTree"></svg>
 		</div>
