@@ -196,7 +196,7 @@ onload = function(){
 		let xPos = 20
 		clauses.forEach((c,index) => {
 			const node = graph.addClause(20+index*100,20,c)
-			graph.setNodePosition(node,xPos)
+			graph.setNodePosition(node,xPos, node.position.y)
 			xPos += node.width + 20
 		})
 		let generatedResolutions : Resolution[]
@@ -213,7 +213,7 @@ onload = function(){
 			for (let i = 0; i < generatedResolutions.length; i++) {
 				const res = generatedResolutions[i];
 				const node = graph.addClause(0, 20+(level)*150, res.result, [res.c1,res.c2])
-				graph.setNodePosition(node,xPos)
+				graph.setNodePosition(node,xPos, node.position.y)
 				xPos += node.width + 20
 				
 			}

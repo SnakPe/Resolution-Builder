@@ -6,7 +6,6 @@ body{
 	padding : 8px;
 	background-color: rgb(48, 42, 36);
 	color: white;
-	user-select: none;
 	overflow-x: hidden;
 }
 #MainInput{
@@ -22,6 +21,7 @@ body{
 svg{
 	width: 90%;
 	height: 90%;
+	user-select: none;
 	display: block;
 	margin: auto;
 	border:2px white solid;

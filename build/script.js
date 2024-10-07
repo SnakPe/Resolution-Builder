@@ -285,20 +285,42 @@ class ResolutionGraph {
         this._edges = [];
         this._x = 0;
         this._y = 0;
+        this._zoom = 1;
         this._svg = svg;
+        svg.addEventListener("pointerover", () => {
+            document.getElementsByTagName("body")[0].style.overflow = "hidden";
+        });
+        svg.addEventListener("pointerout", () => {
+            document.getElementsByTagName("body")[0].style.overflow = "auto";
+        });
         svg.addEventListener("pointerdown", () => {
             this._draggedNode = undefined;
         });
         svg.addEventListener("pointermove", (ev) => {
-            if (this._draggedNode)
-                this.setNodePosition(this._draggedNode, this._x + ev.offsetX - this._draggedNode.width / 2, this._y + ev.offsetY - this._draggedNode.height / 2);
+            if (this._draggedNode !== undefined) {
+                const nodeX = (this._x) + this._zoom * ev.offsetX - this._draggedNode.width / 2;
+                const nodeY = (this._y) + this._zoom * ev.offsetY - this._draggedNode.height / 2;
+                this.setNodePosition(this._draggedNode, nodeX, nodeY);
+            }
             else {
                 if (ev.buttons === 1) {
-                    this._x -= ev.movementX;
-                    this._y -= ev.movementY;
-                    svg.setAttribute("viewBox", `${this._x} ${this._y} ${svg.width.animVal.value} ${svg.height.animVal.value}`);
+                    this._x -= ev.movementX * this._zoom;
+                    this._y -= ev.movementY * this._zoom;
+                    this.refreshSVG();
                 }
             }
+        });
+        svg.addEventListener("wheel", (ev) => {
+            let speed = (ev.deltaY / 100) ** 2;
+            speed = ev.deltaY < 0 ? -speed : speed;
+            const newZoom = this._zoom + speed;
+            if (this._svg.width.baseVal.value * newZoom > 0.5) {
+                const oldZoom = this._zoom;
+                this._zoom = newZoom;
+                this._x += this._svg.width.baseVal.value * (oldZoom - this._zoom) / 2;
+                this._y += this._svg.height.baseVal.value * (oldZoom - this._zoom) / 2;
+            }
+            this.refreshSVG();
         });
         this.clear();
     }
@@ -306,6 +328,12 @@ class ResolutionGraph {
         this._nodes = new Map();
         this._edges = [];
         this._svg.innerHTML = "";
+    }
+    refreshSVG() {
+        const width = this._svg.width.baseVal.value * this._zoom;
+        const height = this._svg.height.baseVal.value * this._zoom;
+        if (height > 0 && width > 0)
+            this._svg.setAttribute("viewBox", `${this._x} ${this._y} ${width} ${height}`);
     }
     addClause(x, y, newClause, resolvedClauses) {
         if (this._nodes.has(newClause))
@@ -480,7 +508,7 @@ onload = function () {
         let xPos = 20;
         clauses.forEach((c, index) => {
             const node = graph.addClause(20 + index * 100, 20, c);
-            graph.setNodePosition(node, xPos);
+            graph.setNodePosition(node, xPos, node.position.y);
             xPos += node.width + 20;
         });
         let generatedResolutions;
@@ -494,7 +522,7 @@ onload = function () {
             for (let i = 0; i < generatedResolutions.length; i++) {
                 const res = generatedResolutions[i];
                 const node = graph.addClause(0, 20 + (level) * 150, res.result, [res.c1, res.c2]);
-                graph.setNodePosition(node, xPos);
+                graph.setNodePosition(node, xPos, node.position.y);
                 xPos += node.width + 20;
             }
             level++;
