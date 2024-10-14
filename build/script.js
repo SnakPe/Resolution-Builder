@@ -2,65 +2,66 @@
 class Clause {
     constructor(vars) {
         if (!vars)
-            this.vars = [];
+            this.literals = [];
         else if (typeof vars == "string")
-            this.vars = getClauseFromString(vars).vars;
+            this.literals = getClauseFromString(vars).literals;
         else
-            this.vars = vars;
+            this.literals = vars;
         this.sortLexically();
     }
     toString() {
         let result = "{";
-        for (let i = 0; i < this.vars.length - 1; i++) {
-            if (this.vars[i].isNegated)
+        for (let i = 0; i < this.literals.length - 1; i++) {
+            if (this.literals[i].isNegated)
                 result += "\u00AC";
-            result += this.vars[i].name;
+            result += this.literals[i].name;
             result += ", ";
         }
-        if (this.vars[this.vars.length - 1]?.isNegated)
+        if (this.literals[this.literals.length - 1]?.isNegated)
             result += "\u00AC";
-        result += this.vars[this.vars.length - 1] ? this.vars[this.vars.length - 1].name : "";
+        result += this.literals[this.literals.length - 1] ? this.literals[this.literals.length - 1].name : "";
         result += "}";
         return result;
     }
     isRedundant() {
-        for (let i = 1; i < this.vars.length; i++)
-            if (this.vars[i].name == this.vars[i - 1].name)
+        for (let i = 1; i < this.literals.length; i++)
+            if (this.literals[i].name == this.literals[i - 1].name)
                 return true;
         return false;
     }
     sortLexically() {
-        this.vars.sort((var1, var2) => var1.name.charCodeAt(0) - var2.name.charCodeAt(0));
+        this.literals.sort((var1, var2) => var1.name.charCodeAt(0) - var2.name.charCodeAt(0));
     }
-    insertVariable(variable) {
-        if (!this.vars.some((v) => { return (v.name == variable.name && v.isNegated == variable.isNegated); }))
-            this.vars.push(variable);
-        this.sortLexically();
+    insertLiteral(literal) {
+        if (!this.literals.some((v) => { return (v.name == literal.name && v.isNegated == literal.isNegated); })) {
+            this.literals.push(literal);
+            this.sortLexically();
+        }
     }
     equals(otherClause) {
-        if (this.vars.length != otherClause.vars.length)
+        if (this.literals.length != otherClause.literals.length)
             return false;
-        return !this.vars.some((var1) => {
-            return !otherClause.vars.some((var2) => (var1.isNegated == var2.isNegated && var1.name == var2.name));
+        return !this.literals.some((var1) => {
+            return !otherClause.literals.some((var2) => (var1.isNegated == var2.isNegated && var1.name == var2.name));
         });
     }
     difference(otherClause) {
-        let result = Math.abs(otherClause.vars.length - this.vars.length);
-        this.vars.forEach(var1 => {
-            if (!otherClause.vars.some(var2 => (var1.name == var2.name && var1.isNegated == var2.isNegated)))
+        let result = Math.abs(otherClause.literals.length - this.literals.length);
+        this.literals.forEach(var1 => {
+            if (!otherClause.literals.some(var2 => (var1.name == var2.name && var1.isNegated == var2.isNegated)))
                 result++;
         });
         return result;
     }
-    resolveWith(otherClause, variable) {
+    resolveWith(otherClause, literal) {
         let result = new Clause();
-        this.vars.forEach(thisVar => {
-            if (thisVar != variable)
-                result.insertVariable(thisVar);
+        this.literals.forEach(thisVar => {
+            if (thisVar != literal)
+                result.insertLiteral(thisVar);
         });
-        otherClause.vars.forEach(otherVar => {
-            if (otherVar.name != variable.name || variable.isNegated == otherVar.isNegated)
-                result.insertVariable(otherVar);
+        otherClause.literals.forEach(otherVar => {
+            if (otherVar.name != literal.name || literal.isNegated == otherVar.isNegated)
+                result.insertLiteral(otherVar);
         });
         return result;
     }
@@ -74,25 +75,25 @@ class ClauseNode {
         this._text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         this._text.classList.add("Text");
         this._text.textContent = clause.toString();
-        this._backbox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        this._backbox.classList.add("Box");
-        this._svg.append(this._backbox, this._text);
+        this._backborder = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        this._backborder.classList.add("Box");
+        this._svg.append(this._backborder, this._text);
         this._coords = { x, y };
     }
     updateSVG() {
-        this._backbox.setAttribute("width", `${this._text.getBBox().width + NODE_PADDING}`);
-        this._backbox.setAttribute("height", `${this._text.getBBox().height + NODE_PADDING}`);
+        this._backborder.setAttribute("width", `${this._text.getBBox().width + NODE_PADDING}`);
+        this._backborder.setAttribute("height", `${this._text.getBBox().height + NODE_PADDING}`);
         this.setPosition(this._coords.x, this._coords.y);
     }
     setPosition(x, y) {
         if (x !== undefined) {
             this._coords.x = x;
-            this._backbox.setAttribute("x", `${x}`);
+            this._backborder.setAttribute("x", `${x}`);
             this._text.setAttribute("x", `${this.center.x}`);
         }
         if (y !== undefined) {
             this._coords.y = y;
-            this._backbox.setAttribute("y", `${y}`);
+            this._backborder.setAttribute("y", `${y}`);
             this._text.setAttribute("y", `${this.center.y}`);
         }
     }
@@ -103,10 +104,10 @@ class ClauseNode {
         return this._coords;
     }
     get width() {
-        return Number(this._backbox.getAttribute("width"));
+        return Number(this._backborder.getAttribute("width"));
     }
     get height() {
-        return Number(this._backbox.getAttribute("height"));
+        return Number(this._backborder.getAttribute("height"));
     }
     get svg() {
         return this._svg;
@@ -131,26 +132,26 @@ class Edge {
         this._svg.append(this._outerLine, this._edgeLine, this._arrowTip);
     }
     updateSVG() {
-        this._line = this.NodesIntersection();
-        if (!this._line)
+        const line = this.NodeIntersection();
+        if (!line)
             return;
-        this._outerLine.setAttribute("x1", `${this._line.start.x}`);
-        this._outerLine.setAttribute("y1", `${this._line.start.y}`);
-        this._outerLine.setAttribute("x2", `${this._line.end.x}`);
-        this._outerLine.setAttribute("y2", `${this._line.end.y}`);
-        this._edgeLine.setAttribute("x1", `${this._line.start.x}`);
-        this._edgeLine.setAttribute("y1", `${this._line.start.y}`);
-        this._edgeLine.setAttribute("x2", `${this._line.end.x}`);
-        this._edgeLine.setAttribute("y2", `${this._line.end.y}`);
-        const tipPointsLineStartDir = scalarMult(normalizedVector(subtract({ x: 0, y: 0 }, vectorForm(this._line).direction)), TIPSIZE);
+        this._outerLine.setAttribute("x1", `${line.start.x}`);
+        this._outerLine.setAttribute("y1", `${line.start.y}`);
+        this._outerLine.setAttribute("x2", `${line.end.x}`);
+        this._outerLine.setAttribute("y2", `${line.end.y}`);
+        this._edgeLine.setAttribute("x1", `${line.start.x}`);
+        this._edgeLine.setAttribute("y1", `${line.start.y}`);
+        this._edgeLine.setAttribute("x2", `${line.end.x}`);
+        this._edgeLine.setAttribute("y2", `${line.end.y}`);
+        const tipPointsLineStartDir = scalarMult(normalizedVector(subtract({ x: 0, y: 0 }, vectorForm(line).direction)), TIPSIZE);
         if (isNaN(tipPointsLineStartDir.x))
             return;
-        const tipPointsLine = pointForm({ start: add(this._line.end, tipPointsLineStartDir), direction: orthogonalVector(tipPointsLineStartDir) });
+        const tipPointsLine = pointForm({ start: add(line.end, tipPointsLineStartDir), direction: orthogonalVector(tipPointsLineStartDir) });
         const tipPoint1 = getPointOnLine(tipPointsLine, .5, true);
         const tipPoint2 = getPointOnLine(tipPointsLine, -.5, true);
-        this._arrowTip.setAttribute("points", `${this._line.end.x},${this._line.end.y} ${tipPoint1.x},${tipPoint1.y} ${tipPoint2.x},${tipPoint2.y}`);
+        this._arrowTip.setAttribute("points", `${line.end.x},${line.end.y} ${tipPoint1.x},${tipPoint1.y} ${tipPoint2.x},${tipPoint2.y}`);
     }
-    NodesIntersection() {
+    NodeIntersection() {
         const fromWidth = this._from.width;
         const fromHeight = this._from.height;
         const toWidth = this._to.width;
@@ -160,7 +161,7 @@ class Edge {
         const dlFrom = add(ulFrom, { x: 0, y: fromHeight });
         const urFrom = add(ulFrom, { x: fromWidth, y: 0 });
         const drFrom = add(ulFrom, { x: fromWidth, y: fromHeight });
-        const fromNodeBoxLines = [
+        const fromNodeBorderLines = [
             { start: ulFrom, end: dlFrom },
             { start: dlFrom, end: drFrom },
             { start: urFrom, end: ulFrom },
@@ -170,7 +171,7 @@ class Edge {
         const dlTo = add(ulTo, { x: 0, y: toHeight });
         const urTo = add(ulTo, { x: toWidth, y: 0 });
         const drTo = add(ulTo, { x: toWidth, y: toHeight });
-        const toNodeBoxLines = [
+        const toNodeBorderLines = [
             { start: ulTo, end: dlTo },
             { start: dlTo, end: drTo },
             { start: urTo, end: ulTo },
@@ -181,38 +182,30 @@ class Edge {
             const t = ((e.start.x - n.start.x) * (n.start.y - n.end.y) - (e.start.y - n.start.y) * (n.start.x - n.end.x)) / divisor;
             const u = -((e.start.x - e.end.x) * (e.start.y - n.start.y) - (e.start.y - e.end.y) * (e.start.x - n.start.x)) / divisor;
             if (0 <= t && t <= 1 && 0 <= u && u <= 1)
-                return { xShift: t * (e.end.x - e.start.x), yShift: t * (e.end.y - e.start.y) };
+                return { x: e.start.x + t * (e.end.x - e.start.x), y: e.start.y + t * (e.end.y - e.start.y) };
             return undefined;
         }
-        let x1 = NaN;
-        let y1 = NaN;
-        let x2 = NaN;
-        let y2 = NaN;
-        for (let i = 0; i < fromNodeBoxLines.length; i++) {
-            const lineFrom = fromNodeBoxLines[i];
-            const lineTo = toNodeBoxLines[i];
+        let start = undefined;
+        let end = undefined;
+        for (let i = 0; i < fromNodeBorderLines.length; i++) {
+            const lineFrom = fromNodeBorderLines[i];
+            const lineTo = toNodeBorderLines[i];
             const isFrom = lineIntersection(edgePoints, lineFrom);
             const isTo = lineIntersection(edgePoints, lineTo);
-            if (isFrom) {
-                x1 = edgePoints.start.x + isFrom.xShift;
-                y1 = edgePoints.start.y + isFrom.yShift;
-            }
-            if (isTo) {
-                x2 = edgePoints.start.x + isTo.xShift;
-                y2 = edgePoints.start.y + isTo.yShift;
-            }
+            if (isFrom)
+                start = isFrom;
+            if (isTo)
+                end = isTo;
         }
-        if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2))
+        if (start == undefined || end == undefined)
             return undefined;
-        return { start: { x: x1, y: y1 }, end: { x: x2, y: y2 } };
+        return { start, end };
     }
     get svg() {
         return this._svg;
     }
     connects(node) {
         return this._to === node || this._from === node;
-    }
-    setColor() {
     }
 }
 function isPoint(a) {
@@ -413,8 +406,8 @@ function getClauseFromString(clause) {
     let result = new Clause();
     clause.split(",").forEach(var1 => {
         let convVar = getVariableFromString(var1);
-        if (convVar && !result.vars.some(var2 => var2 == convVar))
-            result.insertVariable(convVar);
+        if (convVar && !result.literals.some(var2 => var2 == convVar))
+            result.insertLiteral(convVar);
     });
     return result;
 }
@@ -433,9 +426,9 @@ function resolve(clauses) {
         for (let i = index + 1; i < clauses.length; i++) {
             let clause2 = clauses[i];
             let char1Index = 0, char2Index = 0;
-            while (char1Index < clause1.vars.length && char2Index < clause2.vars.length) {
-                const var1 = clause1.vars[char1Index];
-                const var2 = clause2.vars[char2Index];
+            while (char1Index < clause1.literals.length && char2Index < clause2.literals.length) {
+                const var1 = clause1.literals[char1Index];
+                const var2 = clause2.literals[char2Index];
                 if (var1.name == var2.name) {
                     if (var2.isNegated != var1.isNegated) {
                         const genClause = clause1.resolveWith(clause2, var1);
@@ -480,13 +473,13 @@ function getStringFromClauses(clauses) {
     let result = "";
     clauses.forEach(clause => {
         result += "{";
-        clause.vars.forEach(variable => {
+        clause.literals.forEach(variable => {
             if (variable.isNegated)
                 result += "\u00AC";
             result += variable.name;
             result += ",";
         });
-        if (clause.vars.length != 0)
+        if (clause.literals.length != 0)
             result = result.substring(0, result.length - 1);
         result += "}, ";
     });

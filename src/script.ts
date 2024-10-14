@@ -44,7 +44,7 @@ function getClauseFromString(clause : string){
 	clause.split(",").forEach(var1 => {
 		let convVar = getVariableFromString(var1)
 		//if no error and no duplicate
-		if(convVar && !result.vars.some(var2 => var2 == convVar))result.insertVariable(convVar)
+		if(convVar && !result.literals.some(var2 => var2 == convVar))result.insertLiteral(convVar)
 	})
 
 	return result
@@ -76,9 +76,9 @@ function resolve(clauses : Clause[]) : Resolution[]{
 			//compare the variables of 2 clauses with each other
 			
 			let char1Index = 0, char2Index = 0
-			while(char1Index < clause1.vars.length && char2Index < clause2.vars.length){
-				const var1 = clause1.vars[char1Index]
-				const var2 = clause2.vars[char2Index]
+			while(char1Index < clause1.literals.length && char2Index < clause2.literals.length){
+				const var1 = clause1.literals[char1Index]
+				const var2 = clause2.literals[char2Index]
 
 				if(var1.name == var2.name){
 					if(var2.isNegated != var1.isNegated){
@@ -161,12 +161,12 @@ function getStringFromClauses(clauses:Clause[]){
 	let result = ""
 	clauses.forEach(clause => {
 		result += "{"
-		clause.vars.forEach(variable => {
+		clause.literals.forEach(variable => {
 			if(variable.isNegated)result += "\u00AC"
 			result += variable.name
 			result += ","
 		})
-		if(clause.vars.length != 0)result = result.substring(0,result.length-1)
+		if(clause.literals.length != 0)result = result.substring(0,result.length-1)
 		result += "}, "
 	})
 	result = result.substring(0,result.length-2)

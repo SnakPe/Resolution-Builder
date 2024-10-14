@@ -1,82 +1,110 @@
 
+
 class Clause{
-	vars : Literal[]
+	/**
+	 * A list of all the literals in the clause 
+	 */
+	readonly literals : Literal[]
 
 	constructor(vars? : Literal[]|string){
 		if(!vars)
-			this.vars = [] as Literal[]
+			this.literals = [] as Literal[]
 		else if(typeof vars == "string")
-			this.vars = getClauseFromString(vars).vars
-		else this.vars = vars
+			this.literals = getClauseFromString(vars).literals
+		else this.literals = vars
 		this.sortLexically()
 	}
 
+	/**
+	 * 
+	 * @returns A string showing the clause in the clausal form 
+	 */
 	toString(){
 		let result = "{"
 
-		for(let i = 0; i < this.vars.length-1; i++){
-			if(this.vars[i].isNegated) result += "\u00AC"
-			result += this.vars[i].name
+		for(let i = 0; i < this.literals.length-1; i++){
+			if(this.literals[i].isNegated) result += "\u00AC"
+			result += this.literals[i].name
 			result += ", "
 		}
-		if(this.vars[this.vars.length-1]?.isNegated) result += "\u00AC"
-		result += this.vars[this.vars.length-1] ? this.vars[this.vars.length-1].name : "" 
+		if(this.literals[this.literals.length-1]?.isNegated) result += "\u00AC"
+		result += this.literals[this.literals.length-1] ? this.literals[this.literals.length-1].name : "" 
 
 		result += "}"
 		return result
 	}
 
+	/**
+	 * A redundant clause is one that is equivalent to 1/true.
+	 * This is the case when you have the same variable in a clause, but both negated and unnegated,
+	 * so for example {A, -A} means (A or not A), with must always be true
+	 * 
+	 * @returns true if clause is redundant, else false
+	 */
 	isRedundant(){
-		for(let i = 1; i < this.vars.length; i++)
-			if(this.vars[i].name == this.vars[i-1].name)return true;
+		for(let i = 1; i < this.literals.length; i++)
+			if(this.literals[i].name == this.literals[i-1].name)return true;
 		
 		return false;
 	}
 
+	/**
+	 * Sorts the elements of {@link literals} depending on {@link Literal.name | its name} ascendingly
+	 */
 	sortLexically(){
-		this.vars.sort((var1,var2) => var1.name.charCodeAt(0) - var2.name.charCodeAt(0))
+		this.literals.sort((var1,var2) => var1.name.charCodeAt(0) - var2.name.charCodeAt(0))
 	}
 
-	insertVariable(variable : Literal){
-		if(!this.vars.some((v) => {return (v.name == variable.name && v.isNegated == variable.isNegated)}))this.vars.push(variable)
-		this.sortLexically()
+	/**
+	 * Inserts a literal. If the literal is already in the clause, nothing happens
+	 * 
+	 * @param literal The new literal to be inserted
+	 */
+	insertLiteral(literal : Literal){
+		if(!this.literals.some((v) => {return (v.name == literal.name && v.isNegated == literal.isNegated)})){
+			this.literals.push(literal)
+			this.sortLexically()
+		}
 	}
 
 	equals(otherClause : Clause){
-		if(this.vars.length != otherClause.vars.length)return false
-		return !this.vars.some((var1) => {
-			return !otherClause.vars.some((var2) => (var1.isNegated == var2.isNegated && var1.name == var2.name))
+		if(this.literals.length != otherClause.literals.length)return false
+		return !this.literals.some((var1) => {
+			return !otherClause.literals.some((var2) => (var1.isNegated == var2.isNegated && var1.name == var2.name))
 		})
 	}
 
 	/**
+	 * 
 	 * unneccesary
+	 * @ignore
 	 * @param otherClause 
 	 * @returns 
 	 */
 	difference(otherClause : Clause){
-		let result = Math.abs(otherClause.vars.length-this.vars.length)
-		this.vars.forEach(var1 => {
-			if(!otherClause.vars.some(var2 => (var1.name == var2.name && var1.isNegated == var2.isNegated)))
+		let result = Math.abs(otherClause.literals.length-this.literals.length)
+		this.literals.forEach(var1 => {
+			if(!otherClause.literals.some(var2 => (var1.name == var2.name && var1.isNegated == var2.isNegated)))
 				result++
 		})
 		return result
 	}
 
 	/**
-	 * resolves this clause with another clause, with respect to a given variable in this clause
+	 * resolves this clause with another clause, with respect to the {@link literal given variable} in this clause
 	 * @param otherClause 
-	 * @param variable 
-	 * @returns 
+	 * @param literal 
+	 * @returns A new clause derived from inference of the 2 clauses.
 	 */
-	resolveWith(otherClause : Clause, variable : Literal){
+	resolveWith(otherClause : Clause, literal : Literal){
 		let result = new Clause()
-		this.vars.forEach(thisVar => {
-			if(thisVar != variable)result.insertVariable(thisVar)
+		this.literals.forEach(thisVar => {
+			if(thisVar != literal)result.insertLiteral(thisVar)
 		})
-		otherClause.vars.forEach(otherVar => {
-			// zur 2. Aussage: Bei der Resolution muss, wenn variable in this ist, bei der anderen Klausel die Variable mit der anderen Negation entfernt werden, wichtig bei Dingern wie (A, -A)
-			if(otherVar.name != variable.name || variable.isNegated == otherVar.isNegated)result.insertVariable(otherVar)
+		otherClause.literals.forEach(otherVar => {
+			// zur 2. Aussage: Bei der Resolution muss, wenn literal in this ist, bei der anderen Klausel die Variable mit der anderen Negation entfernt werden.
+			// Wichtig bei Dingern wie (A, -A)
+			if(otherVar.name != literal.name || literal.isNegated == otherVar.isNegated)result.insertLiteral(otherVar)
 		})
 		return result
 	}

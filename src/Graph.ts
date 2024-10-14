@@ -1,15 +1,49 @@
-
+/**
+ * Creates a graph to show all the possible new clauses that can be derived with resolution
+ * 
+ * Nodes represent clauses, edges show the 2 clauses needed to get a new clause
+ * The 2 "parent edges" of a child have the same colour, to help the user see what 2 clauses were used to generate the new clause
+ * 
+ * If there are multiple ways of getting the same new Clause, only the first way is shown
+ */
 class ResolutionGraph{
+	/**
+	 * Saves {@link Clause | Clauses} and their corresponding {@link ClauseNode}
+	 */
 	private _nodes : Map<Clause,ClauseNode> = new Map()
+
+	/**
+	 * Saves all edges of the graph 
+	 */
 	private _edges : Edge[] = []
 
-	private _svg : SVGSVGElement
+	/**
+	 * The svg DOM element showing the graph. 
+	 */
+	private readonly _svg : SVGSVGElement
 
+	/**
+	 * Saves the node a user pressed on, or undefined otherwise
+	 */
 	private _draggedNode? : ClauseNode
+	/**
+	 * The x-position of our "camera" on the graph  
+	 */
 	private _x : number = 0
+	/**
+	 * The y-position of our "camera" on the graph  
+	 */
 	private _y : number = 0
+	/**
+	 * The amount of zoom we have. The smaller the number, the more zoomed in we are
+	 */
 	private _zoom : number = 1
 
+	/**
+	 * 
+	 * @param svg the SVG DOM element used to represent the entire graph field.
+	 *   Should usualy be document.getElementById("ResolutionTree")
+	 */
 	constructor(svg : SVGSVGElement){
 		
 		this._svg = svg
@@ -49,7 +83,7 @@ class ResolutionGraph{
 		// zoom in/out
 		svg.addEventListener("wheel",(ev) => {
 			let speed = Math.abs(ev.deltaY/100)**1.5
-			speed = ev.deltaY < 0 ? -speed : speed
+ 				speed = ev.deltaY < 0 ? -speed : speed
 			const newZoom = this._zoom+speed//alternatively: this.zoom*(1+speed)
 
 			if(this._svg.width.baseVal.value * newZoom > 0.5){
@@ -66,12 +100,18 @@ class ResolutionGraph{
 		this.clear()
 	}
 
+	/**
+	 * Cleares the entire graph. Both the internal nodes and edges, and the DOM representation are deleted
+	 */
 	clear(){
 		this._nodes = new Map<Clause,ClauseNode>()
 		this._edges = []
 		this._svg.innerHTML = ""
 	}
 
+	/**
+	 * update properties of {@link _svg} when the properties of this class changes
+	 */
 	refreshSVG(){
 		const width = this._svg.width.baseVal.value * this._zoom
 		const height = this._svg.height.baseVal.value * this._zoom
@@ -80,17 +120,18 @@ class ResolutionGraph{
 			this._svg.setAttribute("viewBox", `${this._x} ${this._y} ${width} ${height}`)
 	}
 	/**
-	 * creates a new Node for a Clause, 
+	 * Creates a new Node for a Clause. 
+	 * If the {@link newClause} was derived through resolution, {@link resolvedClauses} also needs to be provided
 	 * 
 	 * 
-	 * @param resolvedClauses if clause was made by resolving 2 Clauses, add these here
-	 * @returns new node for {@link newClause|the given clause}
+	 * @param resolvedClauses If {@link newClause} was derived by resolution, saves the 2 clauses used for it
+	 * @returns A new node for {@link newClause}
 	 */
 	addClause(x : number, y : number, newClause : Clause, resolvedClauses? : [Clause,Clause]){
 		if(this._nodes.has(newClause))console.warn("Already existing node has been added to graph")
 		const newNode = new ClauseNode(newClause, x, y)
 		
-		//save node as being selected for dragging
+		//save node for dragging it when user presses on it
 		newNode.svg.addEventListener("pointerdown", (ev) => {
 			this._draggedNode = newNode
 			ev.stopPropagation()
@@ -104,6 +145,7 @@ class ResolutionGraph{
 		newNode.updateSVG()
 		this._nodes.set(newClause,newNode)
 
+		//create edges for clauses derived from resolution
 		if(resolvedClauses){
 			console.assert(this._nodes.get(resolvedClauses[0]) !== undefined && this._nodes.get(resolvedClauses[1]) !== undefined)
 
@@ -125,17 +167,34 @@ class ResolutionGraph{
 		return newNode
 	}
 
+	/**
+	 * Sets the position of a node. Also updates all the edges connected to the {@link node}  
+	 * 
+	 * @param node The node where we change the position
+	 * @param x The new x-Position of the node 
+	 * @param y The new y-Position of the node
+	 */
 	setNodePosition(node : ClauseNode, x: number, y: number){
 		node.setPosition(x,y)
 		this.getEdgesConnectingNode(node).forEach(edge => edge.updateSVG())
 	}
 
-
-	
+	/**
+	 * Tries to find a node in this graph that represents the {@link clause} 
+	 * 
+	 * @param clause A clause lol
+	 * @returns The corresponding node in the graph, or undefined if {@link clause} cannot be found inside of the graph 
+	 */
 	getNode(clause : Clause){
 		return this._nodes.get(clause)
 	}
 	
+	/**
+	 * Finds all edges that has {@link node}
+	 * 
+	 * @param node A node in this graph
+	 * @returns All edges of this graph containing {@link node}. Returns an empty array in none are found. 
+	 */
 	private getEdgesConnectingNode(node : ClauseNode) : Edge[]{
 		return this._edges.filter(edge => edge.connects(node))
 	}
